@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+apply plugin: 'checkstyle'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "com.sch.gradle.test"
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+    }
+
+    android.applicationVariants.all { variant ->
+        task "checkstyle${variant.name.capitalize()}"(type: Checkstyle) {
+            group 'Verification'
+            description = "Runs checkstyle on the ${variant.name} variant."
+            showViolations true
+            dependsOn variant.javaCompile
+            classpath = project.fileTree(variant.javaCompile.destinationDir)
+
+            // Doesn't work:
+            source variant.javaCompile.source
+            exclude '**/generated/source/**'
+
+            // Have to use this instead:
+            //source variant.javaCompile.source.filter { file -> !file.path.contains("generated" + File.separator + "source") }
+
+            println "Source files for ${variant.name}:"
+            println variant.javaCompile.source.files
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+}
+
+checkstyle {
+    toolVersion '8.4'
+    configFile project.file('checkstyle.xml')
+}
